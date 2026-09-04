@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#0b1020">
+    <meta name="description" content="Game Scout recommends games and gives concise game reviews.">
+    <title>Game Scout · game recommendations and reviews</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="chat-page">
+    <main class="app-shell container">
+        <section class="chat-card card" aria-labelledby="appTitle">
+            <header class="chat-header card-header">
+                <div class="brand-lockup">
+                    <span class="brand-mark" aria-hidden="true">
+                        <i class="icon fas fa-gamepad"></i>
+                    </span>
+                    <div class="brand-copy">
+                        <p class="eyebrow">Game discovery</p>
+                        <h1 id="appTitle" class="brand-title">Game Scout</h1>
+                        <p class="brand-subtitle"><span class="status-marker" aria-hidden="true"></span>Recommendations and honest reviews</p>
+                    </div>
+                </div>
+                <p class="header-note">Find a better<br><span>next game.</span></p>
+            </header>
+
+            <div id="messageFormeight" class="chat-body card-body" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0">
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-mark" aria-hidden="true">
+                        <i class="icon fas fa-gamepad"></i>
+                    </div>
+                    <p class="eyebrow">Ready for game recs</p>
+                    <h2 class="empty-title">What are you in the mood to play?</h2>
+                    <p class="empty-copy">Tell me what you like, what you are playing, or ask for a quick review.</p>
+                    <div class="starter-prompts" aria-label="Starter prompts">
+                        <button type="button" class="prompt-btn" data-prompt="Give me a concise review of Free Fire: gameplay, strengths, weaknesses, and who it suits.">
+                            <span>Review Free Fire</span>
+                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="prompt-btn" data-prompt="Recommend a co-op game under 10 hours.">
+                            <span>Find a short co-op game</span>
+                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="prompt-btn" data-prompt="Find something like Valorant.">
+                            <span>Find something similar</span>
+                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="chat-footer card-footer">
+                <form id="messageArea" class="chat-form" novalidate>
+                    <div class="field-shell">
+                        <label for="text" class="sr-only">Message</label>
+                        <textarea id="text" name="msg" class="chat-input form-control" rows="1" maxlength="1200" placeholder="Ask for a recommendation or review..." autocomplete="off" required aria-describedby="messageHelp"></textarea>
+                        <div class="composer-meta">
+                            <span id="messageHelp">Enter to send · Shift+Enter for a new line</span>
+                            <span id="characterCount" aria-live="polite">0/1200</span>
+                        </div>
+                    </div>
+                    <button type="submit" id="send" class="send-btn btn" aria-label="Send message" title="Send message">
+                        <i class="icon fas fa-paper-plane" aria-hidden="true"></i>
+                        <span class="sr-only">Send message</span>
+                    </button>
+                </form>
+                <p id="requestStatus" class="sr-only" role="status" aria-live="polite"></p>
+            </footer>
+        </section>
+        <p class="page-note"><i class="icon fas fa-lightbulb" aria-hidden="true"></i> Ask about a genre, platform, mood, playtime, or a specific game.</p>
+    </main>
+
+    <script>
+        (() => {
+            const form = document.getElementById("messageArea");
+            const input = document.getElementById("text");
+            const sendButton = document.getElementById("send");
+            const transcript = document.getElementById("messageFormeight");
+            const emptyState = document.getElementById("emptyState");
+            const characterCount = document.getElementById("characterCount");
+            const requestStatus = document.getElementById("requestStatus");
+            const maxMessageLength = input.maxLength;
+            let isLoading = false;
+
+            const formatTime = (date) => new Intl.DateTimeFormat(undefined, {
+                hour: "numeric",
+                minute: "2-digit"
+            }).format(date);
+
+            const scrollToLatest = () => {
+                transcript.scrollTo({
+                    top: transcript.scrollHeight,
+                    behavior: "smooth"
+                });
+            };
+
+            const updateComposer = () => {
+                characterCount.textContent = `${input.value.length}/${maxMessageLength}`;
+                input.style.height = "auto";
+                input.style.height = `${Math.min(input.scrollHeight, 132)}px`;
+            };
+
+            const createIcon = (name) => {
+                const icon = document.createElement("i");
+                icon.className = `icon fas fa-${name}`;
+                icon.setAttribute("aria-hidden", "true");
+                return icon;
+            };
+
+            const cleanAssistantText = (content) => String(content)
+                .replace(/^\s*#{1,6}\s*/gm, "")
+                .replace(/^\s*(?:[-*•]|\d+[.)])\s+/gm, "• ")
+                .replace(/\*\*(.*?)\*\*/g, "$1")
+                .replace(/^\s*(?:answer|response|assistant|start|begin)\s*:\s*/i, "")
+                .trim();
+
+            const createMessage = (role, content, date = new Date()) => {
+                const row = document.createElement("div");
+                row.className = `message-row message-row--${role}`;
+                row.dataset.role = role;
+
+                const avatar = document.createElement("span");
+                avatar.className = "message-avatar";
+                avatar.setAttribute("aria-hidden", "true");
+                avatar.appendChild(createIcon(role === "user" ? "user" : "gamepad"));
+
+                const contentColumn = document.createElement("div");
+                contentColumn.className = "message-column";
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+
+                const copy = document.createElement("p");
+                copy.className = "message-copy";
+                copy.textContent = role === "assistant" ? cleanAssistantText(content) : content;
+                bubble.appendChild(copy);
+
+                const meta = document.createElement("div");
+                meta.className = "message-meta";
+                const sender = document.createElement("span");
+                sender.textContent = role === "user" ? "You" : "Game Scout";
+                const timestamp = document.createElement("time");
+                timestamp.dateTime = date.toISOString();
+                timestamp.textContent = formatTime(date);
+                meta.append(sender, timestamp);
+
+                contentColumn.append(bubble, meta);
+                row.appendChild(avatar);
+                row.appendChild(contentColumn);
+                return row;
+            };
+
+            const createPendingMessage = () => {
+                const row = document.createElement("div");
+                row.className = "message-row message-row--assistant message-row--pending";
+                row.setAttribute("role", "status");
+
+                const avatar = document.createElement("span");
+                avatar.className = "message-avatar";
+                avatar.setAttribute("aria-hidden", "true");
+                avatar.appendChild(createIcon("gamepad"));
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                const pendingCopy = document.createElement("p");
+                pendingCopy.className = "message-copy pending-copy";
+                pendingCopy.textContent = "Finding a game match";
+                const dots = document.createElement("span");
+                dots.className = "pending-dots";
+                dots.setAttribute("aria-hidden", "true");
+                ["", "", ""].forEach(() => dots.appendChild(document.createElement("span")));
+                pendingCopy.appendChild(dots);
+                bubble.appendChild(pendingCopy);
+
+                const column = document.createElement("div");
+                column.className = "message-column";
+                column.appendChild(bubble);
+                row.append(avatar, column);
+                return row;
+            };
+
+            const createErrorMessage = (message, retry) => {
+                const row = document.createElement("div");
+                row.className = "message-row message-row--error";
+                row.setAttribute("role", "alert");
+
+                const avatar = document.createElement("span");
+                avatar.className = "message-avatar message-avatar--error";
+                avatar.setAttribute("aria-hidden", "true");
+                avatar.appendChild(createIcon("exclamation-circle"));
+
+                const bubble = document.createElement("div");
+                bubble.className = "message-bubble";
+                const copy = document.createElement("p");
+                copy.className = "message-copy";
+                copy.textContent = message;
+
+                const retryButton = document.createElement("button");
+                retryButton.type = "button";
+                retryButton.className = "retry-btn btn";
+                retryButton.textContent = "Try again";
+                retryButton.addEventListener("click", () => {
+                    row.remove();
+                    sendMessage(retry, { appendUser: false });
+                });
+
+                const column = document.createElement("div");
+                column.className = "message-column";
+                bubble.append(copy, retryButton);
+                column.appendChild(bubble);
+                row.append(avatar, column);
+                return row;
+            };
+
+            const setLoading = (loading) => {
+                isLoading = loading;
+                sendButton.disabled = loading;
+                input.disabled = loading;
+                transcript.setAttribute("aria-busy", String(loading));
+                requestStatus.textContent = loading ? "Finding a game match." : "";
+            };
+
+            const requestReply = async (message) => {
+                const response = await fetch("/get", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ msg: message })
+                });
+
+                let payload = null;
+                try {
+                    payload = await response.json();
+                } catch (_error) {
+                    payload = null;
+                }
+
+                if (!response.ok || !payload || payload.ok !== true) {
+                    const serverMessage = payload && payload.error && payload.error.message;
+                    throw new Error(serverMessage || "Something went wrong while creating that answer. Try again shortly.");
+                }
+
+                return payload.reply;
+            };
+
+            const sendMessage = async (message, { appendUser = true } = {}) => {
+                if (isLoading || !message) {
+                    return;
+                }
+
+                emptyState.classList.add("is-hidden");
+                if (appendUser) {
+                    transcript.appendChild(createMessage("user", message));
+                    input.value = "";
+                    updateComposer();
+                }
+
+                const pending = createPendingMessage();
+                transcript.appendChild(pending);
+                setLoading(true);
+                scrollToLatest();
+
+                try {
+                    const reply = await requestReply(message);
+                    pending.remove();
+                    transcript.appendChild(createMessage("assistant", reply));
+                    input.value = "";
+                    updateComposer();
+                    input.focus();
+                } catch (error) {
+                    pending.remove();
+                    input.value = message;
+                    updateComposer();
+                    transcript.appendChild(createErrorMessage(error.message, message));
+                    input.focus();
+                } finally {
+                    setLoading(false);
+                    scrollToLatest();
+                }
+            };
+
+            form.addEventListener("submit", (event) => {
+                event.preventDefault();
+                const message = input.value.trim();
+                input.setAttribute("aria-invalid", String(message.length > maxMessageLength));
+                if (!message || message.length > maxMessageLength) {
+                    input.focus();
+                    return;
+                }
+                sendMessage(message);
+            });
+
+            input.addEventListener("input", updateComposer);
+            input.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
+                    event.preventDefault();
+                    form.requestSubmit();
+                }
+            });
+
+            document.querySelectorAll(".prompt-btn").forEach((button) => {
+                button.addEventListener("click", () => {
+                    input.value = button.dataset.prompt || "";
+                    updateComposer();
+                    input.focus();
+                });
+            });
+
+            updateComposer();
+        })();
+    </script>
+</body>
+</html>
