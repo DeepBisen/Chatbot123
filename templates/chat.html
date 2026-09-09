@@ -8,7 +8,7 @@
     <title>Game Scout · game recommendations and reviews</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous">
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="/style.css">
 </head>
 <body class="chat-page">
     <main class="app-shell container">
@@ -167,7 +167,7 @@
                 bubble.className = "message-bubble";
                 const pendingCopy = document.createElement("p");
                 pendingCopy.className = "message-copy pending-copy";
-                pendingCopy.textContent = "Finding a game match";
+                pendingCopy.textContent = "Checking verified IGDB data";
                 const dots = document.createElement("span");
                 dots.className = "pending-dots";
                 dots.setAttribute("aria-hidden", "true");
@@ -220,7 +220,7 @@
                 sendButton.disabled = loading;
                 input.disabled = loading;
                 transcript.setAttribute("aria-busy", String(loading));
-                requestStatus.textContent = loading ? "Finding a game match." : "";
+                requestStatus.textContent = loading ? "Checking verified IGDB data." : "";
             };
 
             const requestReply = async (message) => {
@@ -242,7 +242,7 @@
 
                 if (!response.ok || !payload || payload.ok !== true) {
                     const serverMessage = payload && payload.error && payload.error.message;
-                    throw new Error(serverMessage || "Something went wrong while creating that answer. Try again shortly.");
+                    throw new Error(serverMessage || "The verified IGDB catalog could not create an answer. Check the Vercel environment variables and try again.");
                 }
 
                 return payload.reply;

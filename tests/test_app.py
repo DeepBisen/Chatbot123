@@ -1,8 +1,55 @@
+import os
 import unittest
 from unittest.mock import patch
 
 from app import app
-from src.helper import ServiceUnavailableError
+from src.helper import (
+    IgdbClient,
+    ServiceUnavailableError,
+    _extract_game_query,
+    format_game_profile,
+    format_search_results,
+)
+
+
+IGDB_GAME = {
+    "id": 123,
+    "slug": "test-game",
+    "name": "Test Game",
+    "first_release_date": 1714521600,
+    "release_dates": [{"human": "May 1, 2024", "date": 1714521600}],
+    "platforms": [{"name": "PC"}],
+    "genres": [{"name": "Action"}],
+    "themes": [{"name": "Science fiction"}],
+    "game_modes": [{"name": "Co-operative"}],
+    "player_perspectives": [{"name": "Third person"}],
+    "involved_companies": [
+        {"company": {"name": "Test Studio"}, "developer": True, "publisher": False, "supporting": False},
+        {"company": {"name": "Test Publisher"}, "developer": False, "publisher": True, "supporting": False},
+    ],
+    "rating": 84.2,
+    "rating_count": 1200,
+    "aggregated_rating": 80.0,
+    "aggregated_rating_count": 25,
+    "total_rating": 82.1,
+    "total_rating_count": 1225,
+    "summary": "A cooperative action adventure.",
+    "storyline": "Two players work together through a shared journey.",
+    "cover": {"url": "//images.igdb.com/igdb/image/upload/t_cover_big/test.jpg"},
+    "screenshots": [{"url": "//images.igdb.com/igdb/image/upload/t_screenshot_med/test.jpg"}],
+    "videos": [{"name": "Launch trailer", "video_id": "abc123"}],
+    "websites": [{"url": "https://example.test/game", "trusted": True}],
+    "external_games": [
+        {
+            "url": "https://example.test/store",
+            "uid": "store-123",
+            "external_game_source": {"name": "Example Store"},
+        }
+    ],
+    "game_engines": [{"name": "Test Engine"}],
+    "keywords": [{"name": "co-op"}],
+    "category": 0,
+}
 
 
 class ChatbotRouteTests(unittest.TestCase):
@@ -15,13 +62,10 @@ class ChatbotRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Game Scout", response.data)
+        self.assertIn(b"verified IGDB data", response.data)
 
-    def test_health_does_not_initialize_external_services(self):
-        with patch("app.get_service_status", return_value={
-            "embeddings": "lazy",
-            "pinecone": "unconfigured",
-            "ollama": "lazy",
-        }):
+    def test_health_requires_twitch_credentials(self):
+        with patch("app.get_service_status", return_value={"igdb": "unconfigured"}):
             response = self.client.get("/health")
 
         self.assertEqual(response.status_code, 200)
@@ -38,51 +82,87 @@ class ChatbotRouteTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 405)
 
-    def test_free_fire_review_is_returned_and_history_is_saved(self):
-        history = [
-            {"role": "user", "content": "I enjoy fast battle royale games."},
-            {"role": "assistant", "content": "I can help compare them."},
-            {"role": "user", "content": "Review Free Fire."},
-            {
-                "role": "assistant",
-                "content": "Free Fire is a fast, accessible battle royale with short matches.",
-            },
-        ]
+    def test_profile_is_rendered_from_igdb_fields(self):
+        with patch.dict(
+            os.environ,
+            {"TWITCH_CLIENT_ID": "test-client", "TWITCH_CLIENT_SECRET": "test-secret"},
+            clear=False,
+        ):
+            with patch("src.helper.get_igdb") as get_igdb:
+                get_igdb.return_value.search.return_value = [IGDB_GAME]
+                get_igdb.return_value.details.return_value = IGDB_GAME
 
-        with patch(
-            "app.chatbot",
-            return_value=(
-                "Free Fire is a fast, accessible battle royale with short matches.",
-                history,
-            ),
-        ) as mocked_chatbot:
-            response = self.client.post(
-                "/get",
-                json={
-                    "msg": "Give me a concise review of Free Fire: gameplay, strengths, weaknesses, and who it suits."
-                },
-            )
+                response = self.client.post("/get", json={"msg": "Review Test Game"})
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.get_json()["ok"], True)
-        self.assertIn("Free Fire", response.get_json()["reply"])
-        mocked_chatbot.assert_called_once()
+        payload = response.get_json()
+        self.assertTrue(payload["ok"])
+        self.assertIn("Test Game", payload["reply"])
+        self.assertIn("Test Studio", payload["reply"])
+        self.assertIn("Co-operative", payload["reply"])
+        self.assertIn("https://example.test/store", payload["reply"])
+        self.assertIn("https://www.youtube.com/watch?v=abc123", payload["reply"])
+        get_igdb.return_value.details.assert_called_once_with(123)
 
-        with self.client.session_transaction() as saved_session:
-            self.assertEqual(saved_session["chat_history"], history)
+    def test_missing_database_field_is_explicitly_labeled(self):
+        reply = format_game_profile({"name": "Unknown Fields", "id": 999})
 
-    def test_service_failure_returns_safe_retryable_error(self):
+        self.assertIn("Not available in IGDB data.", reply)
+        self.assertNotIn("I think", reply)
+
+    def test_broad_query_returns_labeled_database_matches(self):
+        reply = format_search_results(
+            "co-op games",
+            [{"id": 123, "name": "Test Game", "first_release_date": 1714521600}],
+        )
+
+        self.assertIn("IGDB catalog matches", reply)
+        self.assertIn("database matches", reply)
+        self.assertIn("Test Game", reply)
+
+    def test_igdb_client_refreshes_token_and_sends_apicalypse(self):
         with patch(
-            "app.chatbot",
-            side_effect=ServiceUnavailableError("private provider detail"),
+            "src.helper._request_json",
+            side_effect=[{"access_token": "access-token", "expires_in": 3600}, [IGDB_GAME]],
+        ) as request_json:
+            client = IgdbClient("test-client", "test-secret")
+            results = client.search("Test Game")
+
+        self.assertEqual(results, [IGDB_GAME])
+        self.assertEqual(request_json.call_count, 2)
+        token_call = request_json.call_args_list[0]
+        self.assertEqual(token_call.kwargs["method"], "POST")
+        self.assertIn("grant_type=client_credentials", token_call.kwargs["body"])
+        igdb_call = request_json.call_args_list[1]
+        self.assertEqual(igdb_call.kwargs["method"], "POST")
+        self.assertIn('search "Test Game"', igdb_call.kwargs["body"])
+        self.assertEqual(igdb_call.kwargs["headers"]["Client-ID"], "test-client")
+        self.assertEqual(igdb_call.kwargs["headers"]["Authorization"], "Bearer access-token")
+
+    def test_title_parser_preserves_real_game_title_words(self):
+        self.assertEqual(_extract_game_query("Review Test Game"), "Test Game")
+        self.assertEqual(
+            _extract_game_query("Review Call of Duty: Modern Warfare"),
+            "Call of Duty: Modern Warfare",
+        )
+        self.assertEqual(
+            _extract_game_query("Review Free Fire: gameplay and features"),
+            "Free Fire",
+        )
+
+    def test_missing_twitch_credentials_returns_safe_retryable_error(self):
+        with patch.dict(
+            os.environ,
+            {"TWITCH_CLIENT_ID": "", "TWITCH_CLIENT_SECRET": ""},
+            clear=False,
         ):
-            response = self.client.post("/get", json={"msg": "Review Free Fire"})
+            response = self.client.post("/get", json={"msg": "Review Test Game"})
 
         self.assertEqual(response.status_code, 503)
         payload = response.get_json()
         self.assertEqual(payload["error"]["code"], "service_unavailable")
         self.assertTrue(payload["error"]["retryable"])
-        self.assertNotIn("private provider detail", response.get_data(as_text=True))
+        self.assertNotIn("test-secret", response.get_data(as_text=True))
 
 
 if __name__ == "__main__":

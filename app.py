@@ -5,7 +5,14 @@ import os
 from typing import Any
 
 from dotenv import load_dotenv
-from flask import Flask, jsonify, render_template, request, session
+from flask import (
+    Flask,
+    jsonify,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+)
 
 from src.helper import ServiceUnavailableError, chatbot, get_service_status
 
@@ -13,7 +20,7 @@ load_dotenv()
 
 logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 app.config.update(
     SECRET_KEY=os.getenv("FLASK_SECRET_KEY")
     or os.getenv("SECRET_KEY")
@@ -24,6 +31,12 @@ app.config.update(
 MAX_MESSAGE_LENGTH = 1200
 MAX_HISTORY_MESSAGES = 8
 MAX_HISTORY_ENTRY_LENGTH = 800
+
+
+@app.get("/style.css")
+def style_sheet():
+    """Serve the stylesheet locally; Vercel serves public assets from its CDN."""
+    return send_from_directory(os.path.join(app.root_path, "public"), "style.css")
 
 
 def _message_from_request() -> str:
@@ -92,7 +105,7 @@ def index():
 def health():
     """Report process/configuration health without loading model services."""
     services = get_service_status()
-    status = "ready" if services["pinecone"] == "configured" else "degraded"
+    status = "ready" if services.get("igdb") == "configured" else "degraded"
     return jsonify(ok=True, status=status, services=services)
 
 
@@ -121,10 +134,10 @@ def chat():
     try:
         result, updated_history = chatbot(message, history)
     except ServiceUnavailableError:
-        logger.warning("Game chatbot services are unavailable")
+        logger.warning("IGDB game catalog is unavailable")
         return _error_response(
             "service_unavailable",
-            "I cannot reach the game data right now. Check the service settings and try again.",
+            "I cannot reach the verified game catalog right now. Check TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET in the Vercel environment variables and try again.",
             503,
             True,
         )
