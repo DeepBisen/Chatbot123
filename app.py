@@ -14,7 +14,14 @@ from flask import (
     session,
 )
 
-from src.helper import ServiceUnavailableError, chatbot, get_service_status
+from src.helper import (
+    ServiceUnavailableError,
+    chatbot,
+    get_game_details,
+    get_service_status,
+    recommend_games,
+    search_games,
+)
 
 load_dotenv()
 
@@ -107,6 +114,98 @@ def health():
     services = get_service_status()
     status = "ready" if services.get("igdb") == "configured" else "degraded"
     return jsonify(ok=True, status=status, services=services)
+
+
+def _catalog_limit(value: Any) -> int:
+    try:
+        return max(1, min(int(value), 12))
+    except (TypeError, ValueError):
+        return 5
+
+
+def _catalog_failure():
+    logger.warning("IGDB structured catalog request failed")
+    return _error_response(
+        "service_unavailable",
+        "The verified game catalog is temporarily unavailable. Try again shortly.",
+        503,
+        True,
+    )
+
+
+@app.get("/api/games/search")
+def game_search():
+    query = request.args.get("q", "").strip()[:120]
+    try:
+        return jsonify(ok=True, games=search_games(query, _catalog_limit(request.args.get("limit"))))
+    except ServiceUnavailableError:
+        return _catalog_failure()
+    except Exception:
+        logger.exception("Unexpected IGDB search failure")
+        return _catalog_failure()
+
+
+@app.get("/api/games/<int:game_id>")
+def game_details(game_id: int):
+    try:
+        game = get_game_details(game_id)
+    except ServiceUnavailableError:
+        return _catalog_failure()
+    except Exception:
+        logger.exception("Unexpected IGDB details failure")
+        return _catalog_failure()
+
+    if not game:
+        return _error_response("game_not_found", "That game was not found in the verified catalog.", 404, False)
+    return jsonify(ok=True, game=game)
+
+
+@app.post("/api/games/recommend")
+def game_recommendations():
+    payload: Any = request.get_json(silent=True) or {}
+    prompt = payload.get("prompt") if isinstance(payload, dict) else ""
+    if not isinstance(prompt, str) or not prompt.strip():
+        return _error_response("empty_prompt", "Tell us what kind of game you want to find.", 400, False)
+
+    try:
+        limit_value = payload.get("limit", 8) if isinstance(payload, dict) else 8
+        games = recommend_games(prompt[:MAX_MESSAGE_LENGTH], _catalog_limit(limit_value))
+        return jsonify(ok=True, games=games, prompt=prompt.strip())
+    except ServiceUnavailableError:
+        return _catalog_failure()
+    except Exception:
+        logger.exception("Unexpected IGDB recommendation failure")
+        return _catalog_failure()
+
+
+@app.get("/api/saved")
+def saved_games():
+    saved_ids = session.get("saved_game_ids", [])
+    if not isinstance(saved_ids, list):
+        saved_ids = []
+    return jsonify(ok=True, game_ids=[int(game_id) for game_id in saved_ids if str(game_id).isdigit()])
+
+
+@app.post("/api/saved/<int:game_id>")
+def save_game(game_id: int):
+    saved_ids = session.get("saved_game_ids", [])
+    if not isinstance(saved_ids, list):
+        saved_ids = []
+    if game_id not in saved_ids:
+        saved_ids.append(game_id)
+    session["saved_game_ids"] = saved_ids[-50:]
+    session.modified = True
+    return jsonify(ok=True, game_ids=session["saved_game_ids"])
+
+
+@app.delete("/api/saved/<int:game_id>")
+def remove_saved_game(game_id: int):
+    saved_ids = session.get("saved_game_ids", [])
+    if not isinstance(saved_ids, list):
+        saved_ids = []
+    session["saved_game_ids"] = [saved_id for saved_id in saved_ids if saved_id != game_id]
+    session.modified = True
+    return jsonify(ok=True, game_ids=session["saved_game_ids"])
 
 
 @app.post("/get")

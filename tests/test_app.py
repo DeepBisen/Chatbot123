@@ -150,6 +150,43 @@ class ChatbotRouteTests(unittest.TestCase):
             "Free Fire",
         )
 
+    def test_structured_game_search_route_returns_json(self):
+        with patch("app.search_games", return_value=[{"id": 123, "name": "Test Game"}]) as search:
+            response = self.client.get("/api/games/search?q=test&limit=4")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json(), {"ok": True, "games": [{"id": 123, "name": "Test Game"}]})
+        search.assert_called_once_with("test", 4)
+
+    def test_structured_game_details_route_returns_json(self):
+        with patch("app.get_game_details", return_value={"id": 123, "name": "Test Game"}) as details:
+            response = self.client.get("/api/games/123")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["game"]["name"], "Test Game")
+        details.assert_called_once_with(123)
+
+    def test_structured_recommendation_route_returns_json(self):
+        with patch("app.recommend_games", return_value=[{"id": 123, "name": "Test Game"}]) as recommend:
+            response = self.client.post("/api/games/recommend", json={"prompt": "Recommend an RPG", "limit": 8})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.get_json()["ok"])
+        self.assertEqual(response.get_json()["games"][0]["id"], 123)
+        recommend.assert_called_once_with("Recommend an RPG", 8)
+
+    def test_saved_games_are_stored_in_the_flask_session(self):
+        response = self.client.post("/api/saved/123")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["game_ids"], [123])
+
+        response = self.client.get("/api/saved")
+        self.assertEqual(response.get_json()["game_ids"], [123])
+
+        response = self.client.delete("/api/saved/123")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.get_json()["game_ids"], [])
+
     def test_missing_twitch_credentials_returns_safe_retryable_error(self):
         with patch.dict(
             os.environ,

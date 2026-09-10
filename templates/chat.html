@@ -4,454 +4,427 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0b1020">
-    <meta name="description" content="Game Scout recommends games and gives concise game reviews.">
-    <title>Game Scout · game recommendations and reviews</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <meta name="description" content="Game Scout finds verified game information and recommendations.">
+    <title>Game Scout · game discovery</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GX3GXngsA7sZt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body class="chat-page">
-    <main class="app-shell container">
-        <section class="chat-card card" aria-labelledby="appTitle">
-            <header class="chat-header card-header">
-                <div class="brand-lockup">
-                    <span class="brand-mark" aria-hidden="true">
-                        <i class="icon fas fa-gamepad"></i>
+    <main class="app-shell" id="appShell">
+        <aside class="sidebar" id="sidebar" aria-label="Game Scout navigation">
+            <div class="sidebar-top">
+                <button type="button" class="sidebar-brand" data-view="chat" aria-label="Open Game Scout chat">
+                    <span class="brand-mark" aria-hidden="true"><i class="icon fas fa-gamepad"></i></span>
+                    <span class="brand-copy">
+                        <span class="brand-overline">Game discovery</span>
+                        <span class="brand-title">Game Scout</span>
+                        <span class="brand-description">Verified game data</span>
                     </span>
-                    <div class="brand-copy">
-                        <p class="eyebrow">Game discovery</p>
-                        <h1 id="appTitle" class="brand-title">Game Scout</h1>
-                        <p class="brand-subtitle"><span class="status-marker" aria-hidden="true"></span>Recommendations and honest reviews</p>
-                    </div>
-                </div>
-                <p class="header-note">Find a better<br><span>next game.</span></p>
-            </header>
-
-            <div id="messageFormeight" class="chat-body card-body" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0">
-                <div id="emptyState" class="empty-state">
-                    <div class="empty-mark" aria-hidden="true">
-                        <i class="icon fas fa-gamepad"></i>
-                    </div>
-                    <p class="eyebrow">Ready for game recs</p>
-                    <h2 class="empty-title">What are you in the mood to play?</h2>
-                    <p class="empty-copy">Tell me what you like, what you are playing, or ask for a quick review.</p>
-                    <div class="starter-prompts" aria-label="Starter prompts">
-                        <button type="button" class="prompt-btn" data-prompt="Give me a concise review of Free Fire: gameplay, strengths, weaknesses, and who it suits.">
-                            <span>Review Free Fire</span>
-                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="prompt-btn" data-prompt="Recommend a co-op game under 10 hours.">
-                            <span>Find a short co-op game</span>
-                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
-                        </button>
-                        <button type="button" class="prompt-btn" data-prompt="Find something like Valorant.">
-                            <span>Find something similar</span>
-                            <i class="icon fas fa-arrow-right" aria-hidden="true"></i>
-                        </button>
-                    </div>
-                </div>
+                </button>
+                <button type="button" class="sidebar-new-chat btn" data-action="new-chat">
+                    <i class="icon fas fa-plus" aria-hidden="true"></i>
+                    <span>New Chat</span>
+                </button>
             </div>
 
-            <footer class="chat-footer card-footer">
+            <nav class="sidebar-nav" aria-label="Primary">
+                <p class="nav-section-label">Discover</p>
+                <button type="button" class="nav-item is-active" data-view="chat" aria-current="page">
+                    <i class="icon fas fa-compass" aria-hidden="true"></i><span>Explore Games</span>
+                </button>
+                <button type="button" class="nav-item" data-send="Recommend free games for me.">
+                    <i class="icon fas fa-gift" aria-hidden="true"></i><span>Free Games</span>
+                </button>
+                <button type="button" class="nav-item" data-send="Recommend multiplayer games.">
+                    <i class="icon fas fa-users" aria-hidden="true"></i><span>Multiplayer</span>
+                </button>
+                <button type="button" class="nav-item" data-send="What are the most popular games right now?">
+                    <i class="icon fas fa-star" aria-hidden="true"></i><span>Popular Games</span>
+                </button>
+                <button type="button" class="nav-item" data-send="What games are trending right now?"><i class="icon fas fa-fire" aria-hidden="true"></i><span>Trending</span></button>
+                <button type="button" class="nav-item" data-view="find"><i class="icon fas fa-sliders-h" aria-hidden="true"></i><span>Find a Game</span></button>
+
+                <p class="nav-section-label nav-section-label--spaced">My games</p>
+                <button type="button" class="nav-item" data-view="saved">
+                    <i class="icon fas fa-heart" aria-hidden="true"></i><span>Favorites</span><span class="nav-count" id="savedCount">0</span>
+                </button>
+                <button type="button" class="nav-item" data-view="saved">
+                    <i class="icon fas fa-bookmark" aria-hidden="true"></i><span>Saved Games</span>
+                </button>
+            </nav>
+
+            <div class="sidebar-foot">
+                <span class="catalog-status"><span class="status-marker" aria-hidden="true"></span>IGDB verified</span>
+                <span class="sidebar-foot-copy">Facts, not guesses</span>
+            </div>
+        </aside>
+
+        <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation" hidden></button>
+
+        <section class="workspace" aria-labelledby="appTitle">
+            <header class="app-header">
+                <button type="button" class="icon-btn mobile-menu" id="mobileMenu" aria-label="Open navigation" aria-expanded="false">
+                    <i class="icon fas fa-bars" aria-hidden="true"></i>
+                </button>
+                <div class="workspace-heading">
+                    <span class="workspace-kicker" id="viewKicker">Game discovery</span>
+                    <h1 id="appTitle">Game Scout</h1>
+                </div>
+                <div class="header-actions">
+                    <button type="button" class="header-action" data-view="explore"><i class="icon fas fa-compass" aria-hidden="true"></i><span>Explore</span></button>
+                    <button type="button" class="header-action" data-view="saved"><i class="icon fas fa-bookmark" aria-hidden="true"></i><span>Saved</span></button>
+                    <button type="button" class="header-new-chat btn" data-action="new-chat"><i class="icon fas fa-plus" aria-hidden="true"></i><span>New Chat</span></button>
+                </div>
+            </header>
+
+            <div class="workspace-body" id="workspaceBody">
+                <section class="view-panel view-panel--chat is-active" id="chatView" data-view-panel="chat">
+                    <div id="messageFormeight" class="chat-body" role="log" aria-live="polite" aria-relevant="additions" aria-busy="false" tabindex="0">
+                        <div id="emptyState" class="welcome-state">
+                            <div class="welcome-mark" aria-hidden="true"><i class="icon fas fa-gamepad"></i></div>
+                            <span class="welcome-kicker">Verified game discovery</span>
+                            <h2>Find your next game.</h2>
+                            <p>Tell me what you enjoy and I’ll help you find something worth playing, using verified IGDB data.</p>
+                            <div class="welcome-actions" aria-label="Quick game actions">
+                                <button type="button" class="quick-action quick-action--primary" data-send="Recommend a game for me."><i class="icon fas fa-gamepad" aria-hidden="true"></i><span>Find a Game</span></button>
+                                <button type="button" class="quick-action" data-send="Recommend free games for me."><i class="icon fas fa-gift" aria-hidden="true"></i><span>Free Games</span></button>
+                                <button type="button" class="quick-action" data-send="Recommend multiplayer games."><i class="icon fas fa-users" aria-hidden="true"></i><span>Multiplayer</span></button>
+                                <button type="button" class="quick-action" data-send="Recommend story-driven games."><i class="icon fas fa-book-open" aria-hidden="true"></i><span>Story Games</span></button>
+                            </div>
+                            <div class="popular-asks">
+                                <span class="popular-asks-label">Popular things to ask</span>
+                                <div class="popular-asks-list">
+                                    <button type="button" data-send="Recommend an RPG.">Recommend an RPG</button>
+                                    <button type="button" data-send="What games are like Minecraft?">Games like Minecraft</button>
+                                    <button type="button" data-send="What are the best games for a low-end PC?">Best games for a low-end PC</button>
+                                    <button type="button" data-send="What should I play after RDR2?">After RDR2</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="view-panel" id="exploreView" data-view-panel="explore" hidden>
+                    <div class="view-intro">
+                        <div><span class="view-kicker">Your discovery shelf</span><h2>Explore games</h2><p>Games you have already asked Game Scout about.</p></div>
+                        <span class="view-count" id="exploreCount">0 games</span>
+                    </div>
+                    <div class="explore-toolbar" aria-label="Explore filters">
+                        <label class="search-control"><i class="icon fas fa-search" aria-hidden="true"></i><span class="sr-only">Search games</span><input id="exploreSearch" type="search" placeholder="Search games..." autocomplete="off"></label>
+                        <label class="select-control"><span class="sr-only">Filter by genre</span><select id="exploreGenre"><option value="">All Genres</option></select></label>
+                        <label class="select-control"><span class="sr-only">Filter by platform</span><select id="explorePlatform"><option value="">All Platforms</option></select></label>
+                        <label class="select-control"><span class="sr-only">Filter by price</span><select id="explorePrice"><option value="">Free/Paid</option><option value="free">Free</option><option value="paid">Paid</option></select></label>
+                    </div>
+                    <div id="exploreGrid" class="game-grid" aria-live="polite"></div>
+                    <div id="exploreEmpty" class="view-empty" hidden><div class="view-empty-mark"><i class="icon fas fa-gamepad" aria-hidden="true"></i></div><h3>No games found.</h3><p>Ask Game Scout for a recommendation to build your shelf.</p><button type="button" class="text-action" data-view="find">Find a Game <i class="icon fas fa-arrow-right" aria-hidden="true"></i></button></div>
+                </section>
+
+                <section class="view-panel" id="findView" data-view-panel="find" hidden>
+                    <div class="view-intro"><div><span class="view-kicker">Tune your request</span><h2>Find a game</h2><p>Choose a few preferences. Your selections will be sent through the existing Game Scout chat.</p></div></div>
+                    <form class="find-panel" id="filterForm">
+                        <div class="filter-field"><label for="filterGenre">Genre</label><select id="filterGenre"><option value="">Any genre</option><option>RPG</option><option>Action</option><option>FPS</option><option>Horror</option><option>Racing</option><option>Strategy</option><option>Adventure</option><option>Simulation</option><option>Sports</option><option>Sandbox</option></select></div>
+                        <div class="filter-field"><label for="filterPlatform">Platform</label><select id="filterPlatform"><option value="">Any platform</option><option>PC</option><option>PlayStation</option><option>Xbox</option><option>Nintendo Switch</option><option>Android</option><option>iOS</option></select></div>
+                        <div class="filter-field"><label for="filterPrice">Price</label><select id="filterPrice"><option value="">Any price</option><option>Free</option><option>Paid</option></select></div>
+                        <div class="filter-field"><label for="filterPlayStyle">Play style</label><select id="filterPlayStyle"><option value="">Any play style</option><option>Single Player</option><option>Multiplayer</option></select></div>
+                        <div class="filter-field"><label for="filterMood">Mood</label><select id="filterMood"><option value="">Any mood</option><option>Relaxing</option><option>Competitive</option><option>Story-driven</option><option>Challenging</option><option>Casual</option></select></div>
+                        <div class="find-panel-footer"><p><i class="icon fas fa-shield-alt" aria-hidden="true"></i> Game Scout will use the existing verified catalog.</p><button type="submit" class="send-query-btn btn"><i class="icon fas fa-gamepad" aria-hidden="true"></i> Find Games</button></div>
+                    </form>
+                </section>
+
+                <section class="view-panel" id="savedView" data-view-panel="saved" hidden>
+                    <div class="view-intro"><div><span class="view-kicker">Your personal shelf</span><h2>Saved games</h2><p>Keep the games you want to come back to.</p></div><span class="view-count" id="savedViewCount">0 saved</span></div>
+                    <div id="savedGrid" class="game-grid" aria-live="polite"></div>
+                    <div id="savedEmpty" class="view-empty"><div class="view-empty-mark"><i class="icon far fa-heart" aria-hidden="true"></i></div><h3>No saved games yet.</h3><p>Save games you want to play later.</p><button type="button" class="text-action" data-view="find">Find a Game <i class="icon fas fa-arrow-right" aria-hidden="true"></i></button></div>
+                </section>
+            </div>
+
+            <footer class="chat-footer" id="chatFooter">
                 <form id="messageArea" class="chat-form" novalidate>
                     <div class="field-shell">
                         <label for="text" class="sr-only">Message</label>
-                        <textarea id="text" name="msg" class="chat-input form-control" rows="1" maxlength="1200" placeholder="Ask for a recommendation or review..." autocomplete="off" required aria-describedby="messageHelp"></textarea>
-                        <div class="composer-meta">
-                            <span id="messageHelp">Enter to send · Shift+Enter for a new line</span>
-                            <span id="characterCount" aria-live="polite">0/1200</span>
-                        </div>
+                        <textarea id="text" name="msg" class="chat-input form-control" rows="1" maxlength="1200" placeholder="Ask Game Scout for a recommendation..." autocomplete="off" required aria-describedby="messageHelp"></textarea>
+                        <div class="composer-meta"><span id="messageHelp">Enter to send · Shift+Enter for a new line</span><span id="characterCount" aria-live="polite">0/1200</span></div>
                     </div>
-                    <button type="submit" id="send" class="send-btn btn" aria-label="Send message" title="Send message">
-                        <i class="icon fas fa-paper-plane" aria-hidden="true"></i>
-                        <span class="sr-only">Send message</span>
-                    </button>
+                    <button type="submit" id="send" class="send-btn btn" aria-label="Send message" title="Send message"><i class="icon fas fa-paper-plane" aria-hidden="true"></i><span class="sr-only">Send message</span></button>
                 </form>
                 <p id="requestStatus" class="sr-only" role="status" aria-live="polite"></p>
             </footer>
         </section>
-        <p class="page-note"><i class="icon fas fa-lightbulb" aria-hidden="true"></i> Ask about a genre, platform, mood, playtime, or a specific game.</p>
     </main>
+
+    <div class="game-modal" id="gameDetailsModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" aria-hidden="true" hidden>
+        <button type="button" class="modal-backdrop" data-modal-close aria-label="Close game details"></button>
+        <div class="game-modal-dialog">
+            <header class="modal-header"><div><span class="view-kicker">Verified IGDB profile</span><h2 id="modalTitle">Game details</h2></div><button type="button" class="icon-btn modal-close" data-modal-close aria-label="Close game details"><i class="icon fas fa-times" aria-hidden="true"></i></button></header>
+            <div class="modal-body" id="modalBody"></div>
+            <footer class="modal-footer"><button type="button" class="modal-save-btn btn" id="modalSaveButton"><i class="icon far fa-heart" aria-hidden="true"></i><span>Save Game</span></button><button type="button" class="modal-close-text" data-modal-close>Close</button></footer>
+        </div>
+    </div>
 
     <script>
         (() => {
-            const form = document.getElementById("messageArea");
-            const input = document.getElementById("text");
-            const sendButton = document.getElementById("send");
-            const transcript = document.getElementById("messageFormeight");
-            const emptyState = document.getElementById("emptyState");
-            const characterCount = document.getElementById("characterCount");
-            const requestStatus = document.getElementById("requestStatus");
-            const maxMessageLength = input.maxLength;
-            let isLoading = false;
-
-            const formatTime = (date) => new Intl.DateTimeFormat(undefined, {
-                hour: "numeric",
-                minute: "2-digit"
-            }).format(date);
-
-            const scrollToLatest = () => {
-                transcript.scrollTo({
-                    top: transcript.scrollHeight,
-                    behavior: "smooth"
-                });
+            const MAX_MESSAGE_LENGTH = 1200;
+            const state = { activeView: "chat", isLoading: false, sidebarOpen: false, gamesById: new Map(), savedGames: new Map(), selectedGameId: null, lastFocusedElement: null };
+            const dom = {
+                form: document.getElementById("messageArea"), input: document.getElementById("text"), sendButton: document.getElementById("send"), transcript: document.getElementById("messageFormeight"), emptyState: document.getElementById("emptyState"), characterCount: document.getElementById("characterCount"), requestStatus: document.getElementById("requestStatus"), chatFooter: document.getElementById("chatFooter"), viewKicker: document.getElementById("viewKicker"), sidebar: document.getElementById("sidebar"), sidebarBackdrop: document.getElementById("sidebarBackdrop"), mobileMenu: document.getElementById("mobileMenu"), exploreGrid: document.getElementById("exploreGrid"), exploreEmpty: document.getElementById("exploreEmpty"), exploreCount: document.getElementById("exploreCount"), exploreSearch: document.getElementById("exploreSearch"), exploreGenre: document.getElementById("exploreGenre"), explorePlatform: document.getElementById("explorePlatform"), explorePrice: document.getElementById("explorePrice"), savedGrid: document.getElementById("savedGrid"), savedEmpty: document.getElementById("savedEmpty"), savedCount: document.getElementById("savedCount"), savedViewCount: document.getElementById("savedViewCount"), filterForm: document.getElementById("filterForm"), modal: document.getElementById("gameDetailsModal"), modalBody: document.getElementById("modalBody"), modalTitle: document.getElementById("modalTitle"), modalSaveButton: document.getElementById("modalSaveButton")
             };
 
-            const updateComposer = () => {
-                characterCount.textContent = `${input.value.length}/${maxMessageLength}`;
-                input.style.height = "auto";
-                input.style.height = `${Math.min(input.scrollHeight, 132)}px`;
-            };
+            const formatTime = (date) => new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" }).format(date);
+            const createIcon = (name) => { const icon = document.createElement("i"); icon.className = `icon fas fa-${name}`; icon.setAttribute("aria-hidden", "true"); return icon; };
+            const makeElement = (tag, className, text) => { const element = document.createElement(tag); if (className) element.className = className; if (text !== undefined) element.textContent = text; return element; };
+            const safeHttpUrl = (value) => { try { const url = new URL(value); return ["http:", "https:"].includes(url.protocol) ? url.href : ""; } catch (_error) { return ""; } };
+            const normalizeUrl = (value, transform) => { const safe = safeHttpUrl(value); if (!safe) return ""; if (!safe.includes("images.igdb.com")) return safe; return safe.replace(/\/t_[^/]+(?=\/)/, `/${transform}`); };
+            const imageCandidates = (value, transform) => [...new Set([normalizeUrl(value, transform), safeHttpUrl(value)].filter(Boolean))];
+            const cleanLine = (value) => String(value || "").replace(/^\s*(?:[•*-]|\d+[.)])\s*/, "").replace(/\*\*/g, "").trim();
+            const truncateText = (value, length = 170) => { const text = String(value || "").trim(); return text.length > length ? `${text.slice(0, length).trim()}…` : text; };
+            const splitList = (value) => String(value || "").split(",").map((item) => item.trim()).filter((item) => item && !/^not available/i.test(item));
+            const stableId = (game) => String(game.id || game.slug || game.name || "unknown-game").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-            const createIcon = (name) => {
-                const icon = document.createElement("i");
-                icon.className = `icon fas fa-${name}`;
-                icon.setAttribute("aria-hidden", "true");
-                return icon;
-            };
+            const emptyGame = () => ({ id: "", apiId: null, name: "", releaseDate: "", platforms: [], genres: [], themes: [], modes: [], perspectives: [], developers: [], publishers: [], ratings: "", summary: "", storyline: "", coverUrl: "", screenshotUrls: [], videoLinks: [], externalLinks: [], source: "IGDB", price: "" });
+            const normalizeGame = (game) => { const normalized = { ...emptyGame(), ...game }; normalized.id = stableId(normalized); return normalized; };
+            const fromApiGame = (game) => normalizeGame({ ...game, apiId: game.id, id: String(game.id || ""), releaseDate: game.release_date, developers: Array.isArray(game.developers) ? game.developers : splitList(game.developers), publishers: Array.isArray(game.publishers) ? game.publishers : splitList(game.publishers), coverUrl: game.cover_url, screenshotUrls: game.screenshot_urls || [], videoLinks: game.video_links || [], externalLinks: game.external_links || [] });
+            const apiJson = async (url, options = {}) => { const response = await fetch(url, options); let payload = null; try { payload = await response.json(); } catch (_error) { payload = null; } if (!response.ok || !payload || payload.ok !== true) throw new Error((payload && payload.error && payload.error.message) || "The game catalog request failed."); return payload; };
+            const loadSavedGames = async () => { try { const payload = await apiJson("/api/saved"); const details = await Promise.all(payload.game_ids.map((id) => apiJson(`/api/games/${id}`).then((result) => fromApiGame(result.game)))); state.savedGames.clear(); details.forEach((game) => state.savedGames.set(game.id, game)); updateSavedCount(); renderSaved(); } catch (_error) { state.savedGames.clear(); updateSavedCount(); renderSaved(); } };
+            const updateSavedCount = () => { const count = state.savedGames.size; dom.savedCount.textContent = String(count); dom.savedViewCount.textContent = `${count} saved`; };
 
-            const cleanAssistantText = (content) => String(content)
-                .replace(/^\s*#{1,6}\s*/gm, "")
-                .replace(/^\s*(?:[-*•]|\d+[.)])\s+/gm, "• ")
-                .replace(/\*\*(.*?)\*\*/g, "$1")
-                .replace(/^\s*(?:answer|response|assistant|start|begin)\s*:\s*/i, "")
-                .trim();
-
-            const safeHttpUrl = (value) => {
-                try {
-                    const url = new URL(value);
-                    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
-                } catch (_error) {
-                    return "";
-                }
-            };
-
-            const appendTextWithLinks = (parent, text) => {
-                const source = String(text);
-                const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+            const addUrlLink = (parent, text) => {
+                const source = String(text || "");
+                const pattern = /https?:\/\/[^\s<>"']+/gi;
                 let cursor = 0;
                 let match;
-
-                while ((match = urlPattern.exec(source)) !== null) {
-                    const rawUrl = match[0];
-                    const url = rawUrl.replace(/[),.;]+$/g, "");
+                while ((match = pattern.exec(source)) !== null) {
+                    const raw = match[0];
+                    const url = raw.replace(/[),.;]+$/g, "");
                     parent.appendChild(document.createTextNode(source.slice(cursor, match.index)));
-
-                    const safeUrl = safeHttpUrl(url);
-                    if (!safeUrl) {
-                        parent.appendChild(document.createTextNode(rawUrl));
-                    } else {
-                        const link = document.createElement("a");
-                        link.className = "assistant-link";
-                        link.href = safeUrl;
-                        link.target = "_blank";
-                        link.rel = "noopener noreferrer";
-                        link.textContent = url;
-                        parent.appendChild(link);
-                        parent.appendChild(document.createTextNode(rawUrl.slice(url.length)));
-                    }
-                    cursor = match.index + rawUrl.length;
+                    const safe = safeHttpUrl(url);
+                    if (!safe) parent.appendChild(document.createTextNode(raw));
+                    else { const link = makeElement("a", "assistant-link", url); link.href = safe; link.target = "_blank"; link.rel = "noopener noreferrer"; parent.appendChild(link); parent.appendChild(document.createTextNode(raw.slice(url.length))); }
+                    cursor = match.index + raw.length;
                 }
-
                 parent.appendChild(document.createTextNode(source.slice(cursor)));
             };
 
-            const appendAssistantLine = (parent, text) => {
-                const line = document.createElement("span");
-                line.className = "assistant-line";
-                appendTextWithLinks(line, text);
-                parent.append(line, document.createElement("br"));
-            };
-
-            const appendAssistantImage = (parent, url, label, kind) => {
-                const safeUrl = safeHttpUrl(url);
-                if (!safeUrl) {
-                    appendAssistantLine(parent, `${label}: ${url}`);
-                    return;
-                }
-
-                const figure = document.createElement("figure");
-                figure.className = `assistant-media assistant-media--${kind}`;
-
-                const link = document.createElement("a");
-                link.className = "assistant-media-link";
-                link.href = safeUrl;
-                link.target = "_blank";
-                link.rel = "noopener noreferrer";
-
-                const image = document.createElement("img");
-                image.src = safeUrl;
-                image.alt = `${label} from IGDB`;
-                image.loading = "lazy";
-                image.decoding = "async";
-                image.referrerPolicy = "no-referrer";
-                image.addEventListener("error", () => {
-                    figure.classList.add("assistant-media--broken");
-                    link.textContent = `Open ${label.toLowerCase()}`;
-                }, { once: true });
-                link.appendChild(image);
-
-                const caption = document.createElement("figcaption");
-                caption.textContent = label;
-                figure.append(link, caption);
-                parent.append(figure, document.createElement("br"));
-            };
-
-            const createAssistantCopy = (content) => {
-                const copy = document.createElement("div");
-                copy.className = "message-copy message-copy--assistant";
-                const lines = cleanAssistantText(content).split("\n");
-                let currentSection = "";
-                let screenshotNumber = 0;
-
-                lines.forEach((line) => {
-                    const trimmed = line.trim();
-                    if (!trimmed) {
-                        currentSection = "";
-                        copy.appendChild(document.createElement("br"));
-                        return;
-                    }
-
-                    const coverMatch = trimmed.match(/^Cover image:\s*(https?:\/\/\S+)$/i);
-                    if (coverMatch) {
-                        appendAssistantImage(copy, coverMatch[1], "Cover image", "cover");
-                        currentSection = "";
-                        return;
-                    }
-
-                    if (/^Screenshots:\s*$/i.test(trimmed)) {
-                        appendAssistantLine(copy, trimmed);
-                        currentSection = "screenshots";
-                        screenshotNumber = 0;
-                        return;
-                    }
-
-                    if (/^Videos:\s*$/i.test(trimmed)) {
-                        appendAssistantLine(copy, trimmed);
-                        currentSection = "videos";
-                        return;
-                    }
-
-                    if (/^(?:Websites and external links|Store and reference links):\s*$/i.test(trimmed)) {
-                        appendAssistantLine(copy, trimmed);
-                        currentSection = "links";
-                        return;
-                    }
-
-                    const screenshotMatch = currentSection === "screenshots"
-                        ? trimmed.match(/^(?:[•*-]\s*)?(https?:\/\/\S+)$/i)
-                        : null;
-                    if (screenshotMatch) {
-                        screenshotNumber += 1;
-                        appendAssistantImage(copy, screenshotMatch[1], `Screenshot ${screenshotNumber}`, "screenshot");
-                        return;
-                    }
-
-                    appendAssistantLine(copy, line);
+            const parseProfile = (raw) => {
+                const game = emptyGame();
+                const lines = String(raw).split(/\r?\n/);
+                let section = "";
+                lines.forEach((line, index) => {
+                    const trimmed = cleanLine(line);
+                    if (!trimmed) return;
+                    if (index === 0 && !trimmed.includes(":")) { game.name = trimmed; return; }
+                    if (/^Summary:\s*$/i.test(trimmed)) { section = "summary"; return; }
+                    if (/^Storyline:\s*$/i.test(trimmed)) { section = "storyline"; return; }
+                    if (/^Screenshots:\s*$/i.test(trimmed)) { section = "screenshots"; return; }
+                    if (/^Videos:\s*$/i.test(trimmed)) { section = "videos"; return; }
+                    if (/^Websites and external links:\s*$/i.test(trimmed)) { section = "links"; return; }
+                    const cover = trimmed.match(/^Cover image:\s*(https?:\/\S+)$/i);
+                    if (cover) { game.coverUrl = cover[1]; section = ""; return; }
+                    if (section === "summary") { game.summary = `${game.summary} ${trimmed}`.trim(); return; }
+                    if (section === "storyline") { game.storyline = `${game.storyline} ${trimmed}`.trim(); return; }
+                    if (section === "screenshots") { const url = trimmed.match(/(https?:\/\S+)/i); if (url) game.screenshotUrls.push(url[1]); return; }
+                    if (section === "videos") { const url = trimmed.match(/(https?:\/\S+)/i); if (url) game.videoLinks.push({ title: trimmed.replace(url[1], "").replace(/[:\-]\s*$/, "").trim() || "Trailer", url: url[1] }); return; }
+                    if (section === "links") { const url = trimmed.match(/(https?:\/\S+)/i); if (url) game.externalLinks.push({ title: trimmed.replace(url[1], "").replace(/[:\-]\s*$/, "").trim() || "Reference", url: url[1] }); return; }
+                    const field = trimmed.match(/^([^:]+):\s*(.*)$/);
+                    if (!field) return;
+                    section = "";
+                    const key = field[1].toLowerCase();
+                    const value = field[2].trim();
+                    if (key === "release dates") game.releaseDate = value;
+                    else if (key === "platforms") game.platforms = splitList(value);
+                    else if (key === "genres") game.genres = splitList(value);
+                    else if (key === "themes") game.themes = splitList(value);
+                    else if (key === "game modes") game.modes = splitList(value);
+                    else if (key === "player perspectives") game.perspectives = splitList(value);
+                    else if (key === "developers") game.developers = splitList(value);
+                    else if (key === "publishers") game.publishers = splitList(value);
+                    else if (key === "ratings") game.ratings = value;
+                    else if (key === "game engines") game.engines = splitList(value);
+                    else if (key === "keywords") game.keywords = splitList(value);
+                    else if (key === "igdb id") game.apiId = value;
                 });
-
-                return copy;
+                return normalizeGame(game);
             };
 
-            const createMessage = (role, content, date = new Date()) => {
-                const row = document.createElement("div");
-                row.className = `message-row message-row--${role}`;
-                row.dataset.role = role;
+            const parseCatalogMatches = (raw) => {
+                const games = [];
+                let current = null;
+                String(raw).split(/\r?\n/).forEach((line) => {
+                    const title = line.trim().match(/^(?:\d+[.)]|[•*-])\s*(?:\*\*)?(.+?)(?:\*\*)?$/);
+                    if (title && !/^These are database/i.test(title[1])) { if (current) games.push(normalizeGame(current)); current = emptyGame(); current.name = title[1].replace(/\*\*/g, "").trim(); return; }
+                    if (!current) return;
+                    const field = cleanLine(line).match(/^([^:]+):\s*(.*)$/);
+                    if (!field) return;
+                    const key = field[1].toLowerCase();
+                    const value = field[2].trim();
+                    if (key === "release date") current.releaseDate = value;
+                    else if (key === "platforms") current.platforms = splitList(value);
+                    else if (key === "genres") current.genres = splitList(value);
+                    else if (key === "game modes") current.modes = splitList(value);
+                    else if (key === "rating") current.ratings = value;
+                    else if (key === "igdb id") { current.id = value; current.apiId = value; }
+                });
+                if (current) games.push(normalizeGame(current));
+                return games;
+            };
 
-                const avatar = document.createElement("span");
-                avatar.className = "message-avatar";
-                avatar.setAttribute("aria-hidden", "true");
-                avatar.appendChild(createIcon(role === "user" ? "user" : "gamepad"));
+            const parseAssistantReply = (raw) => {
+                const text = String(raw || "").trim();
+                if (/Verified game profile\s*—\s*source:\s*IGDB/i.test(text)) return { type: "profile", games: [parseProfile(text)], text };
+                if (/IGDB catalog matches for:/i.test(text)) return { type: "matches", games: parseCatalogMatches(text), text };
+                return { type: "text", games: [], text };
+            };
 
-                const contentColumn = document.createElement("div");
-                contentColumn.className = "message-column";
+            const registerGames = (games) => { games.forEach((game) => { const normalized = normalizeGame(game); state.gamesById.set(normalized.id, normalized); }); renderExplore(); renderSaved(); updateSavedCount(); };
 
-                const bubble = document.createElement("div");
-                bubble.className = "message-bubble";
+            const mountImage = (link, source, transform, label, className = "") => {
+                const frame = makeElement("div", `media-frame ${className}`.trim());
+                const candidates = imageCandidates(source, transform);
+                if (!candidates.length) { frame.appendChild(makeElement("span", "media-fallback", `No ${label.toLowerCase()} available`)); return frame; }
+                const image = document.createElement("img"); image.alt = `${label} from IGDB`; image.loading = "lazy"; image.decoding = "async"; image.referrerPolicy = "no-referrer";
+                let index = 0;
+                const loadNext = () => { if (index >= candidates.length) { frame.classList.add("is-broken"); image.remove(); frame.appendChild(makeElement("span", "media-fallback", `Open ${label.toLowerCase()}`)); return; } link.href = candidates[index]; image.src = candidates[index]; index += 1; };
+                image.addEventListener("error", loadNext); link.appendChild(image); frame.appendChild(link); loadNext(); return frame;
+            };
 
-                const copy = role === "assistant"
-                    ? createAssistantCopy(content)
-                    : document.createElement("p");
-                copy.className = role === "assistant" ? copy.className : "message-copy";
-                if (role !== "assistant") {
-                    copy.textContent = content;
+            const createGameMedia = (game, label = "Game cover", screenshot = false) => {
+                const link = document.createElement("a"); link.className = "media-link"; link.target = "_blank"; link.rel = "noopener noreferrer"; link.setAttribute("aria-label", `Open ${label}`);
+                return mountImage(link, screenshot ? game.screenshotUrls[0] : game.coverUrl, screenshot ? "t_screenshot_huge" : "t_cover_big", label, screenshot ? "media-frame--screenshot" : "media-frame--cover");
+            };
+
+            const renderGameCard = (game) => {
+                const card = makeElement("article", "game-card"); card.dataset.gameId = game.id;
+                const media = makeElement("div", "game-card-media");
+                const mediaFrame = createGameMedia(game, "Game cover");
+                if (mediaFrame.querySelector("img")) media.appendChild(mediaFrame); else media.appendChild(mediaFrame);
+                card.appendChild(media);
+                const body = makeElement("div", "game-card-body");
+                const top = makeElement("div", "game-card-top"); top.appendChild(makeElement("span", "game-card-source", "IGDB verified"));
+                const save = makeElement("button", "save-button"); save.type = "button"; save.dataset.action = "save"; save.dataset.gameId = game.id; save.setAttribute("aria-label", state.savedGames.has(game.id) ? `Remove ${game.name} from saved games` : `Save ${game.name}`); save.appendChild(createIcon(state.savedGames.has(game.id) ? "heart" : "heart")); if (state.savedGames.has(game.id)) save.classList.add("is-saved"); top.appendChild(save); body.appendChild(top);
+                body.appendChild(makeElement("h3", "game-card-title", game.name || "Untitled game"));
+                const facts = makeElement("div", "game-card-facts"); [...game.genres.slice(0, 2), ...game.platforms.slice(0, 2)].forEach((item) => facts.appendChild(makeElement("span", "fact-chip", item))); if (game.ratings && !/not available/i.test(game.ratings)) facts.appendChild(makeElement("span", "fact-chip fact-chip--rating", `★ ${game.ratings.split(";")[0].replace(/:.*/, "").trim()}`)); body.appendChild(facts);
+                body.appendChild(makeElement("p", "game-card-summary", truncateText(game.summary || game.storyline || "Verified catalog match. Ask for the full profile for more details.")));
+                const actions = makeElement("div", "game-card-actions"); const details = makeElement("button", "card-details-btn", "View Details"); details.type = "button"; details.dataset.action = "details"; details.dataset.gameId = game.id; actions.appendChild(details); body.appendChild(actions); card.appendChild(body); return card;
+            };
+
+            const renderGameGrid = (container, games) => { container.replaceChildren(); games.forEach((game) => container.appendChild(renderGameCard(game))); };
+            const allGames = () => [...state.gamesById.values()];
+            const matchesExploreFilters = (game) => { const query = dom.exploreSearch.value.trim().toLowerCase(); const genre = dom.exploreGenre.value; const platform = dom.explorePlatform.value; const price = dom.explorePrice.value; if (query && !`${game.name} ${game.summary} ${game.genres.join(" ")}`.toLowerCase().includes(query)) return false; if (genre && !game.genres.includes(genre)) return false; if (platform && !game.platforms.some((item) => item.toLowerCase().includes(platform.toLowerCase()))) return false; if (price && game.price !== price) return false; return true; };
+            const refreshSelectOptions = (select, values, label) => { const current = select.value; select.replaceChildren(makeElement("option", "", label)); [...new Set(values)].filter(Boolean).sort().forEach((value) => { const option = makeElement("option", "", value); option.value = value; select.appendChild(option); }); select.value = [...select.options].some((option) => option.value === current) ? current : ""; };
+            const renderExplore = async () => {
+                const query = dom.exploreSearch.value.trim();
+                const genre = dom.exploreGenre.value;
+                const platform = dom.explorePlatform.value;
+                const filterQuery = [query, genre, platform].filter(Boolean).join(" ");
+                try {
+                    const payload = await apiJson(`/api/games/search?q=${encodeURIComponent(filterQuery)}&limit=12`);
+                    const games = payload.games.map(fromApiGame);
+                    games.forEach((game) => state.gamesById.set(game.id, game));
+                    refreshSelectOptions(dom.exploreGenre, games.flatMap((game) => game.genres), "All Genres");
+                    refreshSelectOptions(dom.explorePlatform, games.flatMap((game) => game.platforms), "All Platforms");
+                    const filtered = games.filter(matchesExploreFilters);
+                    dom.exploreCount.textContent = `${filtered.length} game${filtered.length === 1 ? "" : "s"}`;
+                    dom.exploreEmpty.hidden = filtered.length > 0;
+                    renderGameGrid(dom.exploreGrid, filtered);
+                } catch (_error) {
+                    const fallback = allGames().filter(matchesExploreFilters);
+                    dom.exploreCount.textContent = `${fallback.length} game${fallback.length === 1 ? "" : "s"}`;
+                    dom.exploreEmpty.hidden = fallback.length > 0;
+                    renderGameGrid(dom.exploreGrid, fallback);
                 }
-                bubble.appendChild(copy);
-
-                const meta = document.createElement("div");
-                meta.className = "message-meta";
-                const sender = document.createElement("span");
-                sender.textContent = role === "user" ? "You" : "Game Scout";
-                const timestamp = document.createElement("time");
-                timestamp.dateTime = date.toISOString();
-                timestamp.textContent = formatTime(date);
-                meta.append(sender, timestamp);
-
-                contentColumn.append(bubble, meta);
-                row.appendChild(avatar);
-                row.appendChild(contentColumn);
-                return row;
             };
+            const renderSaved = () => { const games = [...state.savedGames.values()]; dom.savedEmpty.hidden = games.length > 0; renderGameGrid(dom.savedGrid, games); updateSavedCount(); };
 
-            const createPendingMessage = () => {
-                const row = document.createElement("div");
-                row.className = "message-row message-row--assistant message-row--pending";
-                row.setAttribute("role", "status");
+            const renderTextResult = (text) => { const copy = makeElement("div", "message-copy message-copy--assistant"); String(text).split(/\r?\n/).forEach((line) => { const row = makeElement("span", "assistant-line"); addUrlLink(row, line.replace(/\*\*/g, "")); copy.append(row, document.createElement("br")); }); return copy; };
+            const renderProfileResult = (game) => { const result = makeElement("article", "profile-result"); const hero = makeElement("div", "profile-hero"); const cover = makeElement("div", "profile-cover"); cover.appendChild(createGameMedia(game, "Cover image")); hero.append(cover); const summary = makeElement("div", "profile-hero-copy"); summary.appendChild(makeElement("span", "game-card-source", "IGDB verified")); summary.appendChild(makeElement("h3", "profile-title", game.name || "Game profile")); summary.appendChild(makeElement("p", "profile-subtitle", game.releaseDate || "Verified catalog profile")); const actions = makeElement("div", "profile-actions"); const save = makeElement("button", "card-details-btn card-details-btn--save", state.savedGames.has(game.id) ? "Saved" : "Save Game"); save.type = "button"; save.dataset.action = "save"; save.dataset.gameId = game.id; actions.appendChild(save); const detail = makeElement("button", "card-details-btn", "View Details"); detail.type = "button"; detail.dataset.action = "details"; detail.dataset.gameId = game.id; actions.appendChild(detail); summary.appendChild(actions); hero.appendChild(summary); result.appendChild(hero); const facts = makeElement("div", "profile-facts"); [["Platforms", game.platforms], ["Genres", game.genres], ["Game modes", game.modes], ["Perspectives", game.perspectives], ["Developers", game.developers], ["Publishers", game.publishers], ["Ratings", game.ratings ? [game.ratings] : []]].forEach(([label, values]) => { if (!values || !values.length) return; const fact = makeElement("div", "profile-fact"); fact.append(makeElement("span", "profile-fact-label", label), makeElement("span", "profile-fact-value", values.join(", "))); facts.appendChild(fact); }); result.appendChild(facts); if (game.summary) { result.appendChild(makeElement("h4", "profile-section-title", "Summary")); result.appendChild(makeElement("p", "profile-copy", game.summary)); } if (game.storyline) { result.appendChild(makeElement("h4", "profile-section-title", "Storyline")); result.appendChild(makeElement("p", "profile-copy", game.storyline)); } if (game.screenshotUrls.length) { const gallery = makeElement("div", "media-gallery"); game.screenshotUrls.slice(0, 4).forEach((url, index) => { const screenshotGame = { ...game, screenshotUrls: [url] }; gallery.appendChild(createGameMedia(screenshotGame, `Screenshot ${index + 1}`, true)); }); result.append(makeElement("h4", "profile-section-title", "Screenshots"), gallery); } return result; };
+            const renderAssistantCopy = (content) => { const parsed = parseAssistantReply(content); registerGames(parsed.games); if (parsed.type === "profile") return renderProfileResult(parsed.games[0]); if (parsed.type === "matches") { const wrapper = makeElement("div", "assistant-result"); wrapper.appendChild(makeElement("p", "assistant-result-intro", `IGDB matches · ${parsed.games.length} result${parsed.games.length === 1 ? "" : "s"}`)); const grid = makeElement("div", "game-grid game-grid--assistant"); renderGameGrid(grid, parsed.games); wrapper.appendChild(grid); return wrapper; } return renderTextResult(parsed.text); };
 
-                const avatar = document.createElement("span");
-                avatar.className = "message-avatar";
+            const createMessage = (role, content, date = new Date()) => { const row = makeElement("div", `message-row message-row--${role}`); row.dataset.role = role; const avatar = makeElement("span", "message-avatar"); avatar.setAttribute("aria-hidden", "true"); avatar.appendChild(createIcon(role === "user" ? "user" : "gamepad")); const column = makeElement("div", "message-column"); const bubble = makeElement("div", "message-bubble"); bubble.appendChild(role === "assistant" ? renderAssistantCopy(content) : makeElement("p", "message-copy", content)); const meta = makeElement("div", "message-meta"); meta.append(makeElement("span", "", role === "user" ? "You" : "Game Scout")); const timestamp = document.createElement("time"); timestamp.dateTime = date.toISOString(); timestamp.textContent = formatTime(date); meta.appendChild(timestamp); column.append(bubble, meta); row.append(avatar, column); return row; };
+            const createPendingMessage = () => { const row = makeElement("div", "message-row message-row--assistant message-row--pending"); row.setAttribute("role", "status"); const avatar = makeElement("span", "message-avatar"); avatar.setAttribute("aria-hidden", "true"); avatar.appendChild(createIcon("gamepad")); const bubble = makeElement("div", "message-bubble"); const copy = makeElement("p", "message-copy pending-copy", "Game Scout is thinking"); const dots = makeElement("span", "pending-dots"); dots.setAttribute("aria-hidden", "true"); ["", "", ""].forEach(() => dots.appendChild(document.createElement("span"))); copy.appendChild(dots); bubble.appendChild(copy); row.append(avatar, makeElement("div", "message-column")); row.lastChild.appendChild(bubble); return row; };
+            const createErrorMessage = (message, retry) => { const row = makeElement("div", "message-row message-row--error"); row.setAttribute("role", "alert"); const avatar = makeElement("span", "message-avatar message-avatar--error"); avatar.setAttribute("aria-hidden", "true"); avatar.appendChild(createIcon("exclamation-circle")); const bubble = makeElement("div", "message-bubble"); bubble.appendChild(makeElement("p", "message-copy", "Something went wrong. Game Scout couldn’t generate a recommendation.")); const button = makeElement("button", "retry-btn btn", "Try Again"); button.type = "button"; button.addEventListener("click", () => { row.remove(); sendMessage(retry, { appendUser: false }); }); bubble.appendChild(button); const column = makeElement("div", "message-column"); column.appendChild(bubble); row.append(avatar, column); return row; };
+
+            const scrollToLatest = () => dom.transcript.scrollTo({ top: dom.transcript.scrollHeight, behavior: "smooth" });
+            const updateComposer = () => { dom.characterCount.textContent = `${dom.input.value.length}/${MAX_MESSAGE_LENGTH}`; dom.input.style.height = "auto"; dom.input.style.height = `${Math.min(dom.input.scrollHeight, 150)}px`; };
+            const setLoading = (loading) => { state.isLoading = loading; dom.sendButton.disabled = loading; dom.input.disabled = loading; dom.transcript.setAttribute("aria-busy", String(loading)); dom.requestStatus.textContent = loading ? "Game Scout is thinking." : ""; };
+            const requestReply = async (message) => { const response = await fetch("/get", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify({ msg: message }) }); let payload = null; try { payload = await response.json(); } catch (_error) { payload = null; } if (!response.ok || !payload || payload.ok !== true) throw new Error((payload && payload.error && payload.error.message) || "Something went wrong."); return payload.reply; };
+            const requestRecommendations = async (prompt) => { const payload = await apiJson("/api/games/recommend", { method: "POST", headers: { "Content-Type": "application/json", "Accept": "application/json" }, body: JSON.stringify({ prompt, limit: 8 }) }); return payload.games.map(fromApiGame); };
+            const createStructuredMessage = (prompt, games) => {
+                const row = makeElement("div", "message-row message-row--assistant");
+                row.dataset.role = "assistant";
+                const avatar = makeElement("span", "message-avatar");
                 avatar.setAttribute("aria-hidden", "true");
                 avatar.appendChild(createIcon("gamepad"));
-
-                const bubble = document.createElement("div");
-                bubble.className = "message-bubble";
-                const pendingCopy = document.createElement("p");
-                pendingCopy.className = "message-copy pending-copy";
-                pendingCopy.textContent = "Checking verified IGDB data";
-                const dots = document.createElement("span");
-                dots.className = "pending-dots";
-                dots.setAttribute("aria-hidden", "true");
-                ["", "", ""].forEach(() => dots.appendChild(document.createElement("span")));
-                pendingCopy.appendChild(dots);
-                bubble.appendChild(pendingCopy);
-
-                const column = document.createElement("div");
-                column.className = "message-column";
-                column.appendChild(bubble);
+                const column = makeElement("div", "message-column");
+                const bubble = makeElement("div", "message-bubble");
+                const wrapper = makeElement("div", "assistant-result");
+                const intro = makeElement("p", "assistant-result-intro", `IGDB matches · ${games.length} result${games.length === 1 ? "" : "s"}`);
+                wrapper.appendChild(intro);
+                registerGames(games);
+                if (games.length) {
+                    const grid = makeElement("div", "game-grid game-grid--assistant");
+                    renderGameGrid(grid, games);
+                    wrapper.appendChild(grid);
+                } else {
+                    const empty = makeElement("div", "view-empty view-empty--inline");
+                    empty.append(makeElement("div", "view-empty-mark", "🎮"), makeElement("h3", "", "No games found."), makeElement("p", "", "Try another combination of filters or a broader request."));
+                    wrapper.appendChild(empty);
+                }
+                bubble.appendChild(wrapper);
+                const meta = makeElement("div", "message-meta");
+                meta.append(makeElement("span", "", "Game Scout"));
+                const timestamp = document.createElement("time");
+                timestamp.dateTime = new Date().toISOString();
+                timestamp.textContent = formatTime(new Date());
+                meta.appendChild(timestamp);
+                column.append(bubble, meta);
                 row.append(avatar, column);
                 return row;
             };
+            const sendStructuredRecommendations = async (prompt) => { if (state.isLoading || !prompt) return; setActiveView("chat"); dom.emptyState.classList.add("is-hidden"); dom.transcript.appendChild(createMessage("user", prompt)); dom.input.value = ""; updateComposer(); const pending = createPendingMessage(); dom.transcript.appendChild(pending); setLoading(true); scrollToLatest(); try { const games = await requestRecommendations(prompt); pending.remove(); dom.transcript.appendChild(createStructuredMessage(prompt, games)); dom.input.focus(); } catch (error) { pending.remove(); dom.transcript.appendChild(createErrorMessage(error.message, prompt)); dom.input.focus(); } finally { setLoading(false); scrollToLatest(); } };
+            const sendMessage = async (message, { appendUser = true } = {}) => { if (state.isLoading || !message) return; setActiveView("chat"); dom.emptyState.classList.add("is-hidden"); if (appendUser) { dom.transcript.appendChild(createMessage("user", message)); dom.input.value = ""; updateComposer(); } const pending = createPendingMessage(); dom.transcript.appendChild(pending); setLoading(true); scrollToLatest(); try { const reply = await requestReply(message); pending.remove(); dom.transcript.appendChild(createMessage("assistant", reply)); dom.input.value = ""; updateComposer(); dom.input.focus(); } catch (error) { pending.remove(); dom.input.value = message; updateComposer(); dom.transcript.appendChild(createErrorMessage(error.message, message)); dom.input.focus(); } finally { setLoading(false); scrollToLatest(); } };
 
-            const createErrorMessage = (message, retry) => {
-                const row = document.createElement("div");
-                row.className = "message-row message-row--error";
-                row.setAttribute("role", "alert");
-
-                const avatar = document.createElement("span");
-                avatar.className = "message-avatar message-avatar--error";
-                avatar.setAttribute("aria-hidden", "true");
-                avatar.appendChild(createIcon("exclamation-circle"));
-
-                const bubble = document.createElement("div");
-                bubble.className = "message-bubble";
-                const copy = document.createElement("p");
-                copy.className = "message-copy";
-                copy.textContent = message;
-
-                const retryButton = document.createElement("button");
-                retryButton.type = "button";
-                retryButton.className = "retry-btn btn";
-                retryButton.textContent = "Try again";
-                retryButton.addEventListener("click", () => {
-                    row.remove();
-                    sendMessage(retry, { appendUser: false });
-                });
-
-                const column = document.createElement("div");
-                column.className = "message-column";
-                bubble.append(copy, retryButton);
-                column.appendChild(bubble);
-                row.append(avatar, column);
-                return row;
-            };
-
-            const setLoading = (loading) => {
-                isLoading = loading;
-                sendButton.disabled = loading;
-                input.disabled = loading;
-                transcript.setAttribute("aria-busy", String(loading));
-                requestStatus.textContent = loading ? "Checking verified IGDB data." : "";
-            };
-
-            const requestReply = async (message) => {
-                const response = await fetch("/get", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Accept": "application/json"
-                    },
-                    body: JSON.stringify({ msg: message })
-                });
-
-                let payload = null;
+            const viewLabels = { chat: "Game discovery", explore: "Your discovery shelf", find: "Tune your request", saved: "Your personal shelf" };
+            const setActiveView = (view) => { state.activeView = view; document.querySelectorAll("[data-view-panel]").forEach((panel) => { panel.hidden = panel.dataset.viewPanel !== view; panel.classList.toggle("is-active", panel.dataset.viewPanel === view); }); document.querySelectorAll("[data-view]").forEach((item) => { item.classList.toggle("is-active", item.dataset.view === view); if (item.classList.contains("nav-item")) item.setAttribute("aria-current", item.dataset.view === view ? "page" : "false"); }); dom.viewKicker.textContent = viewLabels[view] || viewLabels.chat; dom.chatFooter.hidden = view !== "chat"; if (view === "explore") renderExplore(); if (view === "saved") renderSaved(); closeSidebar(); };
+            const closeSidebar = () => { state.sidebarOpen = false; dom.sidebar.classList.remove("is-open"); dom.sidebarBackdrop.hidden = true; dom.mobileMenu.setAttribute("aria-expanded", "false"); };
+            const openSidebar = () => { state.sidebarOpen = true; dom.sidebar.classList.add("is-open"); dom.sidebarBackdrop.hidden = false; dom.mobileMenu.setAttribute("aria-expanded", "true"); };
+            const resetChat = () => { dom.transcript.querySelectorAll(".message-row").forEach((row) => row.remove()); dom.emptyState.classList.remove("is-hidden"); state.gamesById.clear(); dom.input.value = ""; updateComposer(); renderExplore(); setActiveView("chat"); dom.input.focus(); };
+            const toggleSavedGame = async (gameId) => {
+                const game = state.gamesById.get(gameId) || state.savedGames.get(gameId);
+                if (!game) return;
+                const apiId = Number(game.apiId || game.id);
+                if (!Number.isInteger(apiId)) return;
+                const isSaved = state.savedGames.has(gameId);
                 try {
-                    payload = await response.json();
+                    await apiJson(`/api/saved/${apiId}`, { method: isSaved ? "DELETE" : "POST", headers: { "Accept": "application/json" } });
+                    if (isSaved) state.savedGames.delete(gameId);
+                    else state.savedGames.set(gameId, game);
+                    updateSavedCount();
+                    renderExplore();
+                    renderSaved();
+                    if (state.selectedGameId === gameId) renderModal(gameId);
                 } catch (_error) {
-                    payload = null;
-                }
-
-                if (!response.ok || !payload || payload.ok !== true) {
-                    const serverMessage = payload && payload.error && payload.error.message;
-                    throw new Error(serverMessage || "The verified IGDB catalog could not create an answer. Check the Vercel environment variables and try again.");
-                }
-
-                return payload.reply;
-            };
-
-            const sendMessage = async (message, { appendUser = true } = {}) => {
-                if (isLoading || !message) {
-                    return;
-                }
-
-                emptyState.classList.add("is-hidden");
-                if (appendUser) {
-                    transcript.appendChild(createMessage("user", message));
-                    input.value = "";
-                    updateComposer();
-                }
-
-                const pending = createPendingMessage();
-                transcript.appendChild(pending);
-                setLoading(true);
-                scrollToLatest();
-
-                try {
-                    const reply = await requestReply(message);
-                    pending.remove();
-                    transcript.appendChild(createMessage("assistant", reply));
-                    input.value = "";
-                    updateComposer();
-                    input.focus();
-                } catch (error) {
-                    pending.remove();
-                    input.value = message;
-                    updateComposer();
-                    transcript.appendChild(createErrorMessage(error.message, message));
-                    input.focus();
-                } finally {
-                    setLoading(false);
-                    scrollToLatest();
+                    dom.requestStatus.textContent = "Could not update saved games. Try again.";
                 }
             };
 
-            form.addEventListener("submit", (event) => {
-                event.preventDefault();
-                const message = input.value.trim();
-                input.setAttribute("aria-invalid", String(message.length > maxMessageLength));
-                if (!message || message.length > maxMessageLength) {
-                    input.focus();
-                    return;
-                }
-                sendMessage(message);
-            });
+            const renderModal = (gameId) => { const game = state.gamesById.get(gameId) || state.savedGames.get(gameId); if (!game) return; state.selectedGameId = gameId; dom.modalTitle.textContent = game.name || "Game details"; dom.modalBody.replaceChildren(); const intro = makeElement("div", "modal-game-intro"); const cover = makeElement("div", "modal-cover"); cover.appendChild(createGameMedia(game, "Cover image")); intro.append(cover); const copy = makeElement("div", "modal-game-copy"); copy.append(makeElement("span", "game-card-source", "IGDB verified"), makeElement("p", "modal-release", game.releaseDate || "Verified catalog profile"), makeElement("p", "modal-description", game.summary || game.storyline || "No description available in IGDB data.")); intro.appendChild(copy); dom.modalBody.appendChild(intro); const facts = makeElement("div", "modal-facts"); [["Genres", game.genres], ["Platforms", game.platforms], ["Modes", game.modes], ["Developers", game.developers], ["Publishers", game.publishers], ["Ratings", game.ratings ? [game.ratings] : []]].forEach(([label, value]) => { if (!value || !value.length) return; facts.append(makeElement("div", "profile-fact", [makeElement("span", "profile-fact-label", label), makeElement("span", "profile-fact-value", value.join(", "))])); }); dom.modalBody.appendChild(facts); const similar = allGames().filter((candidate) => candidate.id !== game.id).slice(0, 3); if (similar.length) { dom.modalBody.appendChild(makeElement("h3", "modal-section-title", "Similar games in this chat")); const grid = makeElement("div", "game-grid game-grid--modal"); renderGameGrid(grid, similar); dom.modalBody.appendChild(grid); } dom.modalSaveButton.classList.toggle("is-saved", state.savedGames.has(game.id)); dom.modalSaveButton.querySelector("span").textContent = state.savedGames.has(game.id) ? "Saved" : "Save Game"; };
+            const openModal = (gameId, trigger) => { state.lastFocusedElement = trigger || document.activeElement; renderModal(gameId); dom.modal.hidden = false; dom.modal.setAttribute("aria-hidden", "false"); document.body.classList.add("modal-open"); const current = state.gamesById.get(gameId); const apiId = current && Number(current.apiId || current.id); if (Number.isInteger(apiId)) apiJson(`/api/games/${apiId}`).then((payload) => { const hydrated = fromApiGame(payload.game); state.gamesById.set(gameId, hydrated); if (!dom.modal.hidden && state.selectedGameId === gameId) renderModal(gameId); }).catch(() => {}); requestAnimationFrame(() => dom.modal.querySelector("[data-modal-close]")?.focus()); };
+            const closeModal = () => { dom.modal.hidden = true; dom.modal.setAttribute("aria-hidden", "true"); document.body.classList.remove("modal-open"); state.selectedGameId = null; state.lastFocusedElement?.focus?.(); };
 
-            input.addEventListener("input", updateComposer);
-            input.addEventListener("keydown", (event) => {
-                if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
-                    event.preventDefault();
-                    form.requestSubmit();
-                }
-            });
+            const composeFilterPrompt = () => { const values = [["genre", document.getElementById("filterGenre").value], ["platform", document.getElementById("filterPlatform").value], ["price", document.getElementById("filterPrice").value], ["play style", document.getElementById("filterPlayStyle").value], ["mood", document.getElementById("filterMood").value]].filter(([, value]) => value); const parts = values.map(([label, value]) => `${value} ${label}`); return parts.length ? `Recommend ${parts.join(" ")} games.` : "Recommend a game for me."; };
 
-            document.querySelectorAll(".prompt-btn").forEach((button) => {
-                button.addEventListener("click", () => {
-                    input.value = button.dataset.prompt || "";
-                    updateComposer();
-                    input.focus();
-                });
-            });
+            document.addEventListener("click", (event) => { const viewTarget = event.target.closest("[data-view]"); if (viewTarget) { event.preventDefault(); setActiveView(viewTarget.dataset.view); return; } const sendTarget = event.target.closest("[data-send]"); if (sendTarget) { event.preventDefault(); sendMessage(sendTarget.dataset.send); return; } const action = event.target.closest("[data-action]"); if (action?.dataset.action === "new-chat") { resetChat(); return; } if (action?.dataset.action === "save") { toggleSavedGame(action.dataset.gameId); return; } if (action?.dataset.action === "details") { openModal(action.dataset.gameId, action); return; } if (event.target.closest("[data-modal-close]")) closeModal(); });
+            dom.mobileMenu.addEventListener("click", () => state.sidebarOpen ? closeSidebar() : openSidebar());
+            dom.sidebarBackdrop.addEventListener("click", closeSidebar);
+            dom.modalSaveButton.addEventListener("click", () => { if (state.selectedGameId) toggleSavedGame(state.selectedGameId); });
+            dom.form.addEventListener("submit", (event) => { event.preventDefault(); const message = dom.input.value.trim(); dom.input.setAttribute("aria-invalid", String(message.length > MAX_MESSAGE_LENGTH)); if (!message || message.length > MAX_MESSAGE_LENGTH) { dom.input.focus(); return; } sendMessage(message); });
+            dom.input.addEventListener("input", updateComposer);
+            dom.input.addEventListener("keydown", (event) => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); dom.form.requestSubmit(); } });
+            dom.filterForm.addEventListener("submit", (event) => { event.preventDefault(); const prompt = composeFilterPrompt(); sendStructuredRecommendations(prompt); });
+            [dom.exploreSearch, dom.exploreGenre, dom.explorePlatform, dom.explorePrice].forEach((control) => control.addEventListener("input", renderExplore));
+            document.addEventListener("keydown", (event) => { if (event.key === "Escape") { if (!dom.modal.hidden) closeModal(); else if (state.sidebarOpen) closeSidebar(); } });
 
-            updateComposer();
+            loadSavedGames(); updateSavedCount(); updateComposer(); renderExplore(); renderSaved(); setActiveView("chat");
         })();
     </script>
 </body>

@@ -38,6 +38,8 @@ SEARCH_FIELDS = ",".join(
         "rating_count",
         "total_rating",
         "total_rating_count",
+        "cover.url",
+        "summary",
     ]
 )
 
@@ -165,6 +167,16 @@ class IgdbClient:
             f"fields {SEARCH_FIELDS}; "
             f'search "{escaped_query}"; '
             "where version_parent = null; "
+            f"limit {max(1, min(page_size, 10))};"
+        )
+        payload = self._query("games", apicalypse)
+        return [item for item in payload if isinstance(item, dict)] if isinstance(payload, list) else []
+
+    def discover(self, page_size: int = DEFAULT_IGDB_PAGE_SIZE) -> list[dict[str, Any]]:
+        apicalypse = (
+            f"fields {SEARCH_FIELDS}; "
+            "where version_parent = null & rating_count > 0; "
+            "sort rating desc; "
             f"limit {max(1, min(page_size, 10))};"
         )
         payload = self._query("games", apicalypse)
@@ -531,6 +543,67 @@ def _format_links(game: dict[str, Any]) -> str:
     return "\n".join(f"- {link}" for link in links) or f"- {UNKNOWN}"
 
 
+def _game_payload(game: dict[str, Any]) -> dict[str, Any]:
+    """Return a bounded frontend-safe game object sourced only from IGDB."""
+    cover = game.get("cover")
+    screenshots = game.get("screenshots")
+    videos = game.get("videos")
+    websites = game.get("websites")
+    external_games = game.get("external_games")
+
+    return {
+        "id": game.get("id"),
+        "name": _display(game.get("name"), "Untitled game"),
+        "slug": _display(game.get("slug"), ""),
+        "release_date": _format_release_dates(game),
+        "platforms": _names(game.get("platforms")),
+        "genres": _names(game.get("genres")),
+        "themes": _names(game.get("themes")),
+        "modes": _names(game.get("game_modes")),
+        "perspectives": _names(game.get("player_perspectives")),
+        "developers": _format_involved_companies(game.get("involved_companies"), "developer"),
+        "publishers": _format_involved_companies(game.get("involved_companies"), "publisher"),
+        "ratings": _format_ratings(game),
+        "summary": _strip_markup(game.get("summary")),
+        "storyline": _strip_markup(game.get("storyline")),
+        "cover_url": _image_url(cover.get("url")) if isinstance(cover, dict) else "",
+        "screenshot_urls": [
+            _image_url(item.get("url"))
+            for item in screenshots[:8]
+            if isinstance(item, dict) and _image_url(item.get("url"))
+        ] if isinstance(screenshots, list) else [],
+        "video_links": [
+            {
+                "title": item.get("name") or "Trailer",
+                "url": f"https://www.youtube.com/watch?v={item.get('video_id')}",
+            }
+            for item in videos[:6]
+            if isinstance(item, dict) and isinstance(item.get("video_id"), str) and item.get("video_id").strip()
+        ] if isinstance(videos, list) else [],
+        "external_links": (
+            [
+                {"title": "Website", "url": item.get("url")}
+                for item in websites[:6]
+                if isinstance(item, dict) and isinstance(item.get("url"), str) and item.get("url").strip()
+            ] if isinstance(websites, list) else []
+        ) + (
+            [
+                {
+                    "title": (
+                        item.get("external_game_source", {}).get("name")
+                        if isinstance(item.get("external_game_source"), dict)
+                        else "External reference"
+                    ),
+                    "url": item.get("url"),
+                }
+                for item in external_games[:8]
+                if isinstance(item, dict) and isinstance(item.get("url"), str) and item.get("url").strip()
+            ] if isinstance(external_games, list) else []
+        ),
+        "source": "IGDB",
+    }
+
+
 def format_game_profile(game: dict[str, Any]) -> str:
     """Render only fields returned by IGDB; never infer missing game facts."""
     summary = _strip_markup(game.get("summary"))
@@ -544,6 +617,7 @@ def format_game_profile(game: dict[str, Any]) -> str:
         [
             f"**{_display(game.get('name'))}**",
             "Verified game profile — source: IGDB",
+            f"IGDB ID: {_display(game.get('id'))}",
             "",
             f"Release dates: {_format_release_dates(game)}",
             f"Platforms: {_format_platforms(game.get('platforms'))}",
@@ -631,6 +705,29 @@ def chatbot(
         {"role": "assistant", "content": reply},
     ]
     return reply, _clean_history(updated_history)
+
+
+def search_games(query: str = "", limit: int = DEFAULT_IGDB_PAGE_SIZE) -> list[dict[str, Any]]:
+    """Return structured IGDB cards for Explore and frontend filters."""
+    catalog = get_igdb()
+    results = catalog.search(query, limit) if query.strip() else catalog.discover(limit)
+    return [_game_payload(game) for game in results]
+
+
+def get_game_details(game_id: int | str) -> dict[str, Any]:
+    """Return one structured IGDB profile for the details modal."""
+    game = get_igdb().details(game_id)
+    return _game_payload(game) if game else {}
+
+
+def recommend_games(query: str, limit: int = DEFAULT_IGDB_PAGE_SIZE) -> list[dict[str, Any]]:
+    """Return structured IGDB matches for frontend Find a Game requests."""
+    normalized_query = query.strip()
+    search_query = _extract_game_query(normalized_query) or normalized_query
+    results = search_games(search_query, limit)
+    if not results and search_query != normalized_query:
+        results = search_games(normalized_query, limit)
+    return results
 
 
 # Preserve the old public helper name for scripts that may still import it.
