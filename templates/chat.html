@@ -117,6 +117,142 @@
                 .replace(/^\s*(?:answer|response|assistant|start|begin)\s*:\s*/i, "")
                 .trim();
 
+            const safeHttpUrl = (value) => {
+                try {
+                    const url = new URL(value);
+                    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+                } catch (_error) {
+                    return "";
+                }
+            };
+
+            const appendTextWithLinks = (parent, text) => {
+                const source = String(text);
+                const urlPattern = /https?:\/\/[^\s<>"']+/gi;
+                let cursor = 0;
+                let match;
+
+                while ((match = urlPattern.exec(source)) !== null) {
+                    const rawUrl = match[0];
+                    const url = rawUrl.replace(/[),.;]+$/g, "");
+                    parent.appendChild(document.createTextNode(source.slice(cursor, match.index)));
+
+                    const safeUrl = safeHttpUrl(url);
+                    if (!safeUrl) {
+                        parent.appendChild(document.createTextNode(rawUrl));
+                    } else {
+                        const link = document.createElement("a");
+                        link.className = "assistant-link";
+                        link.href = safeUrl;
+                        link.target = "_blank";
+                        link.rel = "noopener noreferrer";
+                        link.textContent = url;
+                        parent.appendChild(link);
+                        parent.appendChild(document.createTextNode(rawUrl.slice(url.length)));
+                    }
+                    cursor = match.index + rawUrl.length;
+                }
+
+                parent.appendChild(document.createTextNode(source.slice(cursor)));
+            };
+
+            const appendAssistantLine = (parent, text) => {
+                const line = document.createElement("span");
+                line.className = "assistant-line";
+                appendTextWithLinks(line, text);
+                parent.append(line, document.createElement("br"));
+            };
+
+            const appendAssistantImage = (parent, url, label, kind) => {
+                const safeUrl = safeHttpUrl(url);
+                if (!safeUrl) {
+                    appendAssistantLine(parent, `${label}: ${url}`);
+                    return;
+                }
+
+                const figure = document.createElement("figure");
+                figure.className = `assistant-media assistant-media--${kind}`;
+
+                const link = document.createElement("a");
+                link.className = "assistant-media-link";
+                link.href = safeUrl;
+                link.target = "_blank";
+                link.rel = "noopener noreferrer";
+
+                const image = document.createElement("img");
+                image.src = safeUrl;
+                image.alt = `${label} from IGDB`;
+                image.loading = "lazy";
+                image.decoding = "async";
+                image.referrerPolicy = "no-referrer";
+                image.addEventListener("error", () => {
+                    figure.classList.add("assistant-media--broken");
+                    link.textContent = `Open ${label.toLowerCase()}`;
+                }, { once: true });
+                link.appendChild(image);
+
+                const caption = document.createElement("figcaption");
+                caption.textContent = label;
+                figure.append(link, caption);
+                parent.append(figure, document.createElement("br"));
+            };
+
+            const createAssistantCopy = (content) => {
+                const copy = document.createElement("div");
+                copy.className = "message-copy message-copy--assistant";
+                const lines = cleanAssistantText(content).split("\n");
+                let currentSection = "";
+                let screenshotNumber = 0;
+
+                lines.forEach((line) => {
+                    const trimmed = line.trim();
+                    if (!trimmed) {
+                        currentSection = "";
+                        copy.appendChild(document.createElement("br"));
+                        return;
+                    }
+
+                    const coverMatch = trimmed.match(/^Cover image:\s*(https?:\/\/\S+)$/i);
+                    if (coverMatch) {
+                        appendAssistantImage(copy, coverMatch[1], "Cover image", "cover");
+                        currentSection = "";
+                        return;
+                    }
+
+                    if (/^Screenshots:\s*$/i.test(trimmed)) {
+                        appendAssistantLine(copy, trimmed);
+                        currentSection = "screenshots";
+                        screenshotNumber = 0;
+                        return;
+                    }
+
+                    if (/^Videos:\s*$/i.test(trimmed)) {
+                        appendAssistantLine(copy, trimmed);
+                        currentSection = "videos";
+                        return;
+                    }
+
+                    if (/^(?:Websites and external links|Store and reference links):\s*$/i.test(trimmed)) {
+                        appendAssistantLine(copy, trimmed);
+                        currentSection = "links";
+                        return;
+                    }
+
+                    const screenshotMatch = currentSection === "screenshots"
+                        ? trimmed.match(/^(?:[•*-]\s*)?(https?:\/\/\S+)$/i)
+                        : null;
+                    if (screenshotMatch) {
+                        screenshotNumber += 1;
+                        appendAssistantImage(copy, screenshotMatch[1], `Screenshot ${screenshotNumber}`, "screenshot");
+                        return;
+                    }
+
+                    appendAssistantLine(copy, line);
+                });
+
+                return copy;
+            };
+
             const createMessage = (role, content, date = new Date()) => {
                 const row = document.createElement("div");
                 row.className = `message-row message-row--${role}`;
@@ -133,9 +269,13 @@
                 const bubble = document.createElement("div");
                 bubble.className = "message-bubble";
 
-                const copy = document.createElement("p");
-                copy.className = "message-copy";
-                copy.textContent = role === "assistant" ? cleanAssistantText(content) : content;
+                const copy = role === "assistant"
+                    ? createAssistantCopy(content)
+                    : document.createElement("p");
+                copy.className = role === "assistant" ? copy.className : "message-copy";
+                if (role !== "assistant") {
+                    copy.textContent = content;
+                }
                 bubble.appendChild(copy);
 
                 const meta = document.createElement("div");
